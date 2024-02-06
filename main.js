@@ -53,7 +53,7 @@ function drawImageRot(image, x, y, w, h, rotation) {
     ctx.rotate(rotation);
     ctx.drawImage(image, -w/2, -h/2, w, h);
     ctx.rotate(-rotation);
-    ctx.translate(-width / 2 + x, -height / 2 + y);
+    ctx.translate(-(width / 2 + x), -(height / 2 + y));
 }
 
 function update(deltaTime) {
@@ -67,6 +67,8 @@ function update(deltaTime) {
         players[i].rotation = rLerp(players[i].rotation, serverPlayers[i].rotation, pingTime * 10);
         players[i].x += players[i].xv * deltaTime;
         players[i].y += players[i].yv * deltaTime;
+        players[i].x = lerp(players[i].x, serverPlayers[i].x, 0.1);
+        players[i].y = lerp(players[i].y, serverPlayers[i].y, 0.1);
     }
 }
 
@@ -77,18 +79,20 @@ function render() {
     width = canvas.width;
     height = canvas.height;
 
+    ctx.clearRect(0, 0, width, height);
+
     const scale = player.zoom * height / 100;
 
     for(let i = 0; i < solarSystems.length; i++) {
         solarSystems[i].render(ctx, scale, player);
     }
 
-   // drawImageRot(ship, 0, 0, scale, scale, player.rotation);
+    drawImageRot(ship, 0, 0, scale, scale, player.rotation);
 
     // Render other players
     for(let i = 0; i < players.length; i++) {
-        const p = players[i];
-        drawImageRot(ship, player.x - p.x, player.y - p.y, scale, scale, p.rotation);
+        let p = players[i];
+        drawImageRot(ship, (p.x - player.x) * scale, (p.y - player.y) * scale, scale, scale, p.rotation);
     }
 }
 
@@ -99,7 +103,10 @@ function loop(timestamp) {
     deltaTime = (timestamp - lastRender) / 1000;
 
     // Don't run updates if still connecting
-    if(client.socket.readyState !== WebSocket.OPEN) return;
+    if(client.socket.readyState !== WebSocket.OPEN) {
+        window.requestAnimationFrame(loop);
+        return;
+    }
 
     update(deltaTime);
     render();
@@ -117,7 +124,7 @@ function loop(timestamp) {
     player.update(deltaTime);
     
     pingTime += deltaTime;
-    if(pingTime > 0.1) {
+    if(pingTime > 0.4) {
         // Send over own player data
         client.Send(JSON.stringify({"name": "player", "data": player}));
 
@@ -125,6 +132,7 @@ function loop(timestamp) {
     }
   
     lastRender = timestamp;
+
     window.requestAnimationFrame(loop);
 }
 
@@ -145,8 +153,6 @@ function OnServerRecieve(event) {
     for(let i = 0; i < serverPlayers.length; ++i) {
         players[i].xv = serverPlayers[i].xv;
         players[i].yv = serverPlayers[i].yv;
-        players[i].x = lerp(players[i].x, serverPlayers[i].x, 0.1);
-        players[i].y = lerp(players[i].y, serverPlayers[i].y, 0.1);
     }
 }
 
@@ -169,7 +175,9 @@ function OnServerFail() {
 
 window.onload = function() {
     // Connect to server
-    client = new ServerClient("ws://0.0.0.0:8888", OnServerConnect, OnServerRecieve, OnServerError, OnServerFail);
+    let addr = "ws://" + location.hostname + ":8888";
+    console.log("Connecting to server " + addr);
+    client = new ServerClient(addr, OnServerConnect, OnServerRecieve, OnServerError, OnServerFail);
 
     // Inital render for connection screen
     render();
