@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Russo+One&display=swap');
+
+html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    
+    background-color: black;
+}
+
+#space {
+    position: fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    
+    background-image: url("resources/space.png");
+
+    /* Create the parallax scrolling effect */
+    background-attachment: fixed;
+    background-repeat: repeat;
+    background-size: 50vh;
+
+    filter: blur(1px);
+    filter: brightness(0.6);
+}
+
+#connect {
+    position: fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+
+    backdrop-filter: blur(10px);
+
+    padding-top: 10vh;
+}
+
+h1 {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.84);
+    font-family: 'Russo One', sans-serif;
+    font-weight: 400;
+}
+h2 {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: 'Russo One', sans-serif;
+    font-weight: lighter;
+    font-size: 100%;
+}
+
+#canvas { 
+    filter: none;
+
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+}
