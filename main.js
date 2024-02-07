@@ -237,7 +237,7 @@ function OnMouseDown(event) {
     }
 }
 
-//document.onmousemove = MouseMoveEvent;
+document.onmousemove = MouseMoveEvent;
 document.addEventListener("mousedown", OnMouseDown);
 document.addEventListener("mouseup", OnMouseUp);
 document.addEventListener("mouseout", OnMouseUp);
