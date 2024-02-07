@@ -22,8 +22,8 @@ export class Planet {
 
         this.selected = distance(drawPos.x + hsize, drawPos.y + hsize, player.mouse.x, player.mouse.y) < hsize;
 
-        //if(this.selected) ctx.filter = "brightness(110%)";
+        if(this.selected) ctx.filter = "brightness(110%)";
         ctx.drawImage(this.sprite, drawPos.x, drawPos.y, this.size * scale, this.size * scale)
-        //if(this.selected) ctx.filter = "brightness(100%)";
+        if(this.selected) ctx.filter = "brightness(100%)";
     }
 }

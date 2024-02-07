@@ -25,6 +25,7 @@ canvas.height = window.innerHeight;
 
 let width = canvas.width;
 let height = canvas.height;
+let scale = 1;
 
 const keyDown = Array();
 
@@ -81,7 +82,7 @@ function render() {
 
     ctx.clearRect(0, 0, width, height);
 
-    const scale = player.zoom * height / 100;
+    scale = player.zoom * height / 100;
 
     for(let i = 0; i < solarSystems.length; i++) {
         solarSystems[i].render(ctx, scale, player);
@@ -92,6 +93,7 @@ function render() {
     // Render other players
     for(let i = 0; i < players.length; i++) {
         let p = players[i];
+        if(p.you) continue;
         drawImageRot(ship, (p.x - player.x) * scale, (p.y - player.y) * scale, scale, scale, p.rotation);
     }
 }
@@ -124,7 +126,7 @@ function loop(timestamp) {
     player.update(deltaTime);
     
     pingTime += deltaTime;
-    if(pingTime > 0.4) {
+    if(pingTime > 0.1) {
         // Send over own player data
         client.Send(JSON.stringify({"name": "player", "data": player}));
 
@@ -175,7 +177,7 @@ function OnServerFail() {
 
 window.onload = function() {
     // Connect to server
-    let addr = "ws://" + location.hostname + ":8888";
+    let addr = "wss://57c4516d-5b60-4b78-9fec-70283c0405f0-00-1z1geo8e7bi4n.janeway.replit.dev";
     console.log("Connecting to server " + addr);
     client = new ServerClient(addr, OnServerConnect, OnServerRecieve, OnServerError, OnServerFail);
 
@@ -200,8 +202,28 @@ function MouseMoveEvent(event) {
     };
 }
 
-document.onmousemove = MouseMoveEvent;
-document.addEventListener("click", (event) => {
+let mouseDownId = -1;
+function WhileMouseDown() {
+    if(player.destination.set && player.destination.type == "planet") return;
+    player.destination.x = (player.mouse.x - width / 2) / scale + player.x;
+    player.destination.y = (player.mouse.y - height / 2) / scale + player.y;
+    player.destination.zoom = player.zoom;
+    player.destination.set = true;
+    player.destination.type = null;
+}
+
+function OnMouseUp(event) {
+    if(mouseDownId != -1) {
+        clearInterval(mouseDownId);
+        mouseDownId=-1;
+    }
+}
+
+function OnMouseDown(event) {
+    player.destination.type = null;
+    if(mouseDownId == -1)
+        mouseDownId = setInterval(WhileMouseDown, 100);
+
     // Find selected body
     for(let i = 0; i < solarSystems.length; i++) {
         if(solarSystems[i].selected) {
@@ -209,6 +231,26 @@ document.addEventListener("click", (event) => {
             player.destination.y = solarSystems[i].position.y;
             player.destination.zoom = solarSystems[i].size / 100;
             player.destination.set = true;
+            player.destination.type = "planet";
+            return;
         }
     }
+}
+
+//document.onmousemove = MouseMoveEvent;
+document.addEventListener("mousedown", OnMouseDown);
+document.addEventListener("mouseup", OnMouseUp);
+document.addEventListener("mouseout", OnMouseUp);
+document.addEventListener("touchstart", (event) => {
+    event.preventDefault();
+    if(event.touches.length > 1) return;
+    MouseMoveEvent({clientX: event.touches[0].pageX, clientY: event.touches[0].pageY});
+    OnMouseDown(event);
+});
+document.addEventListener("touchend", OnMouseUp);
+document.addEventListener("touchcancel", OnMouseUp);
+document.addEventListener("touchmove", (event) => {
+    if(event.touches.length > 1) return;
+
+    MouseMoveEvent({clientX: event.touches[0].pageX, clientY: event.touches[0].pageY});
 });

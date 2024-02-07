@@ -5,7 +5,6 @@ export class ServerClient {
     }
     OnSocketError(event) {
         if(this.attempts === 4) {
-            console.log("t");
             this._callbackfail();
             return;
         }

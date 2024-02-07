@@ -12,10 +12,11 @@ export class Player {
         this.y = y;
         this.velocity = {x: 0, y: 0};
         this.mouse = {x:0, y:0};
-        this.destination = {x:0, y:0, set:false};
+        this.destination = {x:0, y:0, set:false, type:null};
         this.zoom = 0.5;
         this.zoomVelocity = 1;
         this.rotation = 0;
+        this.ip = ipaddr;
     }
 
     update(deltaTime) {
