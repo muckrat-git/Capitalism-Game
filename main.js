@@ -1,6 +1,7 @@
 import { Planet } from './src/planets.js';
 import { Player } from './src/player.js';
 import { ServerClient } from './src/client.js';
+import { MathUtil } from './src/mathutil.js';
 
 // Player and players
 let player = new Player(0, 0);
@@ -9,7 +10,12 @@ let players = Array();
 let serverPlayers = Array();
 
 const solarSystems = new Array(
-    new Planet(50, "resources/Sun.svg", {x: 0, y: 0})
+    new Planet(50, "resources/Sun.svg", {x: 0, y: 0}, new Array(
+		new Planet(18, "resources/World3.svg", {x: 0, y: 100}, new Array(
+			new Planet(4, "resources/Moon.svg", {x: 0, y: 18}),
+			new Planet(2, "resources/Moon.svg", {x: 0, y: 26})
+		))
+	))
 );
 
 // Get canvas and canvas ctx
@@ -27,6 +33,8 @@ let width = canvas.width;
 let height = canvas.height;
 let scale = 1;
 
+const address = "wss://57c4516d-5b60-4b78-9fec-70283c0405f0-00-1z1geo8e7bi4n.janeway.replit.dev";
+
 const keyDown = Array();
 
 let ship = GetImage("resources/Ship.svg");
@@ -37,16 +45,6 @@ function GetImage(src) {
     let img = new Image();
     img.src = src;
     return(img);
-}
-
-function rLerp (a, b, w){
-    let CS = (1-w)*Math.cos(a) + w*Math.cos(b);
-    let SN = (1-w)*Math.sin(a) + w*Math.sin(b);
-    return Math.atan2(SN,CS);
-}
-
-function lerp(a, b, alpha) {
-    return a + alpha * (b - a);
 }
 
 function drawImageRot(image, x, y, w, h, rotation) {
@@ -62,32 +60,48 @@ function update(deltaTime) {
     background.style.backgroundSize = String(size) + "vh";
     background.style.backgroundPositionX = String(width / 2 - player.x * player.zoom / 3) + "px";
     background.style.backgroundPositionY = String(height / 2 - player.y * player.zoom / 3) + "px";
-    
+
+	// Update celestial bodies
+	for(let i = 0; i < solarSystems.length; i++) {
+		solarSystems[i].update(ctx, scale, deltaTime);
+	}
+	
     // Update other players
     for(let i = 0; i < players.length; i++) {
-        players[i].rotation = rLerp(players[i].rotation, serverPlayers[i].rotation, pingTime * 10);
+        players[i].rotation = MathUtil.rLerp(players[i].rotation, serverPlayers[i].rotation, pingTime * 10);
         players[i].x += players[i].xv * deltaTime;
         players[i].y += players[i].yv * deltaTime;
-        players[i].x = lerp(players[i].x, serverPlayers[i].x, 0.1);
-        players[i].y = lerp(players[i].y, serverPlayers[i].y, 0.1);
+        players[i].x = MathUtil.lerp(players[i].x, serverPlayers[i].x, 0.1);
+        players[i].y = MathUtil.lerp(players[i].y, serverPlayers[i].y, 0.1);
+    }
+}
+
+function renderSystem(orbitalSystem, parent) {
+	for(let i = 0; i < orbitalSystem.length; i++) {
+		orbitalSystem[i].render(ctx, scale, player, parent);
+
+		// Render sub-system
+		renderSystem(orbitalSystem[i].orbiters, orbitalSystem[i]);
     }
 }
 
 function render() {
-    canvas.width = window.innerWidth;
+  	// Get screen width and height
+	canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
     width = canvas.width;
     height = canvas.height;
 
+	// Calculate rendering scale
+	scale = player.zoom * height / 100;
+
+	// Clear screen for rendering
     ctx.clearRect(0, 0, width, height);
 
-    scale = player.zoom * height / 100;
+    // Render celestial bodies
+	renderSystem(solarSystems);
 
-    for(let i = 0; i < solarSystems.length; i++) {
-        solarSystems[i].render(ctx, scale, player);
-    }
-
+	// Draw player
     drawImageRot(ship, 0, 0, scale, scale, player.rotation);
 
     // Render other players
@@ -98,7 +112,7 @@ function render() {
     }
 }
 
-let lastRender = 0;
+let lastRender = 0;	// Time of last render
 let pingTime = 0;   // Time since last server exchange
 
 function loop(timestamp) {
@@ -177,9 +191,8 @@ function OnServerFail() {
 
 window.onload = function() {
     // Connect to server
-    let addr = "wss://57c4516d-5b60-4b78-9fec-70283c0405f0-00-1z1geo8e7bi4n.janeway.replit.dev";
-    console.log("Connecting to server " + addr);
-    client = new ServerClient(addr, OnServerConnect, OnServerRecieve, OnServerError, OnServerFail);
+    console.log("Connecting to server " + address);
+    client = new ServerClient(address, OnServerConnect, OnServerRecieve, OnServerError, OnServerFail);
 
     // Inital render for connection screen
     render();
@@ -237,10 +250,13 @@ function OnMouseDown(event) {
     }
 }
 
+// Mouse event listeners
 document.onmousemove = MouseMoveEvent;
 document.addEventListener("mousedown", OnMouseDown);
 document.addEventListener("mouseup", OnMouseUp);
 document.addEventListener("mouseout", OnMouseUp);
+
+// Mobile device event listeners
 document.addEventListener("touchstart", (event) => {
     event.preventDefault();
     if(event.touches.length > 1) return;
@@ -251,6 +267,5 @@ document.addEventListener("touchend", OnMouseUp);
 document.addEventListener("touchcancel", OnMouseUp);
 document.addEventListener("touchmove", (event) => {
     if(event.touches.length > 1) return;
-
     MouseMoveEvent({clientX: event.touches[0].pageX, clientY: event.touches[0].pageY});
 });
