@@ -119,6 +119,7 @@ function render() {
 let lastRender = 0;	// Time of last render
 let pingTime = 0;   // Time since last server exchange
 
+// If server failure has occured
 let failed = false;
 
 function loop(timestamp) {
@@ -143,6 +144,7 @@ function loop(timestamp) {
 		return;
     }
 
+    // Queue update and render
     update(deltaTime);
     render();
 
@@ -156,46 +158,55 @@ function loop(timestamp) {
         if(keyDown['d']) player.velocity.x += 300 * deltaTime / player.zoom;
     }
 
+    // Update player
     player.update(deltaTime);
-    
+
+    // Run server exchange every .1 seconds
     pingTime += deltaTime;
     if(pingTime > 0.1) {
         // Send over own player data
         client.Send(JSON.stringify({"name": "player", "data": player}));
-
         pingTime = 0;
     }
-  
+
+    // Update last render
     lastRender = timestamp;
 
+    // Queue next frame
     window.requestAnimationFrame(loop);
 }
 
+// Server recieve callback
 function OnServerRecieve(event) {
+    // Log non-json logic
     if(event.data[0] !== '{') {
         console.log("[Server]->(" + typeof(event.data) + ") : " + event.data);
         return;
     }
 
+    // Convert json to object
     let packet = JSON.parse(event.data);
     if(!packet.hasOwnProperty("name")) return;
     if(!packet.hasOwnProperty("data")) return;
 
 	// Handle errors
-	if(packet.name === "error") {
+	if(packet.name == "error") {
 		serverScreen.style.display = "block";
 		serverScreen.innerHTML = "<h1>Server error</h1><h2>" + packet.data + "</h2>";
 		failed = true;
 		return;
 	}
 
-    serverPlayers = packet.data;
-    if(players.length !== serverPlayers.length) players = serverPlayers; 
+    // Handle playerdata packet
+    if(packet.name == "players") {
+        serverPlayers = packet.data;
+        if(players.length !== serverPlayers.length) players = serverPlayers; 
     
-    // Copy initial velocity and nudge toward real xy
-    for(let i = 0; i < serverPlayers.length; ++i) {
-        players[i].xv = serverPlayers[i].xv;
-        players[i].yv = serverPlayers[i].yv;
+        // Copy initial velocity and nudge toward real xy
+        for(let i = 0; i < serverPlayers.length; ++i) {
+            players[i].xv = serverPlayers[i].xv;
+            players[i].yv = serverPlayers[i].yv;
+        }
     }
 }
 
