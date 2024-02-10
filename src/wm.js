@@ -1,12 +1,12 @@
 export class Window {
     Resize(width, height) {
+        // Apply window rolling
         if(height < this.titlebar.offsetHeight * 2) {
             height = this.titlebar.offsetHeight;
             if(!this.rolled) {
                 this.resize.style.width = "5px";
                 this.resize.style.height = this.titlebar.offsetHeight + "px";
                 this.resize.src = "resources/resize-vert.png";
-                this.controls.style.padding = "0 10px";
                 this.rolled = true;
             }
         }
@@ -14,10 +14,10 @@ export class Window {
             this.rolled = false;
             this.resize.style.width = "15px";
             this.resize.style.height = "15px";
-            this.controls.style.padding = "0 5px";
             this.resize.src = "resources/resize.png";
         }
-        
+
+        // Clamp width and height
         this.width = Math.max(width, this.minWidth);
         this.height = Math.max(height, this.titlebar.offsetHeight);
         if(this.width + this.x > window.innerWidth) this.width = window.innerWidth - this.x;
@@ -27,6 +27,9 @@ export class Window {
         this.element.style.width = this.width + "px";
         this.titlebar.style.width = this.width + "px";
         this.element.style.height = this.height + "px";
+
+        // Remove transition
+        this.element.style.transition = "none";
     }
 
     Move(x, y) {
@@ -45,19 +48,24 @@ export class Window {
             this.rolled = false;
             this.resize.style.width = "15px";
             this.resize.style.height = "15px";
-            this.controls.style.padding = "0 5px";
             this.resize.src = "resources/resize.png";
-            this.height = this.minHeight;
+            this.height = this.lastHeight;
             this.element.style.height = this.height + "px";
+
+            // Apply transition
+            this.element.style.transition = "height 0.2s";
         }
         else {
+            this.lastHeight = this.height;
             this.resize.style.width = "5px";
             this.resize.style.height = this.titlebar.offsetHeight + "px";
             this.resize.src = "resources/resize-vert.png";
-            this.controls.style.padding = "0 10px";
             this.rolled = true;
             this.height = this.titlebar.offsetHeight;
             this.element.style.height = this.height + "px";
+
+            // Apply transition
+            this.element.style.transition = "height 0.2s";
         }
     }
 
@@ -122,9 +130,10 @@ export class Window {
         // Initial sizing
         let initialSize = {x:0, y:0};
         this.minWidth = 200;
-        this.minHeight = this.titlebar.offsetHeight;
+        this.minHeight = this.titlebar.offsetHeight * 2;
         initialSize.x = this.minWidth;
         initialSize.y = 300;
+        this.lastHeight = initialSize.y;
 
         // Initial sizing
         this.Resize(initialSize.x, initialSize.y);
