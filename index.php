@@ -19,18 +19,6 @@
 
     <div class="window">
         <div class="title-bar">
-            <h1>Planet</h1>
-            <div class="controls">
-                <button>🗕</button>
-                <button>🗙</button>
-            </div>
-        </div>
-        <iframe class="content" src="pages/planet.html"></iframe>
-        <img class="resize" src="resources/resize.png" draggable="false">
-    </div>
-
-    <div class="window">
-        <div class="title-bar">
             <h1>Test</h1>
             <div class="controls">
                 <button>🗕</button>

@@ -60,7 +60,44 @@ export class Window {
             this.element.style.height = this.height + "px";
         }
     }
-    
+
+    // Constructs a window from a page url
+    static FromPage(url) {
+        // Create elem and set class
+        const elem = document.createElement("div");
+        elem.className = "window";
+
+        // Add title bar
+        elem.innerHTML = (`
+            <div class="title-bar">
+                <h1>Loading</h1>
+                <div class="controls">
+                    <button>🗕</button>
+                    <button>🗙</button>
+                </div>
+            </div>
+        `);
+
+        // Create iframe
+        const iframe = document.createElement("iframe");
+        iframe.src = url;
+        iframe.className = "content";
+
+        // Create resize element
+        const resize = document.createElement("img");
+        resize.className = "resize";
+        resize.src = "resources/resize.png";
+        resize.draggable = false;
+
+        // Add elements to window
+        elem.appendChild(iframe);
+        elem.appendChild(resize);
+
+        // Return window
+        return new Window(elem);
+    }
+
+    // Default window constructor
     constructor(element) {
         this.dragging = false;
         this.resizing = false;
@@ -157,29 +194,48 @@ export class Window {
                         }
                     );
                 }
-                
+
+                // Get default window size in case meta is not available
                 let initialSize = {x:this.width, y:this.height};
 
                 // Get embed meta data
                 let metaTags = this.embed.contentWindow.document.querySelectorAll("meta");
 
-                // Find viewport
+                // Find custom meta data
                 for(let i = 0; i < metaTags.length; i++) {
                     if(metaTags[i].getAttribute("name") == "window") {
+                        // Get min bounds data
                         this.minWidth = parseInt(metaTags[i].getAttribute("minw"));
                         this.minHeight = parseInt(metaTags[i].getAttribute("minh"));
+
+                        // Get initial bounds data
                         initialSize.x = parseInt(metaTags[i].getAttribute("width"));
                         initialSize.y = parseInt(metaTags[i].getAttribute("height"));
                     }
                 }
 
+                // Apply sizing
                 this.Resize(initialSize.x, initialSize.y);
+
+                // Get page title
+                let title = this.embed.contentWindow.document.querySelector("title");
+                if(title == null) return;
+
+                // Apply title
+                this.titlebar.querySelector("h1").innerText = title.innerText;
             });
         }
     }
 }
 
 export class WindowManager {
+    // Add windows constructed in javascript
+    AddWindow(window) {
+        document.body.appendChild(window.element);
+        this.windows.push(window);
+    }
+    
+    // Basic window manager constructor
     constructor() {
         this.windows = new Array();
         

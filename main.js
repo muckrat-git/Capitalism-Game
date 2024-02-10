@@ -2,7 +2,7 @@ import { Planet } from './src/planets.js';
 import { Player } from './src/player.js';
 import { ServerClient } from './src/client.js';
 import { MathUtil } from './src/mathutil.js';
-import { WindowManager } from './src/wm.js';
+import { WindowManager, Window } from './src/wm.js';
 
 // Player and players
 let player = new Player(0, 0);
@@ -199,6 +199,7 @@ function OnServerRecieve(event) {
     }
 }
 
+// Server succesfully connected
 function OnServerConnect(event) {
     // Send inital player data
     client.Send(JSON.stringify({"name": "player", "data": player}));
@@ -206,26 +207,20 @@ function OnServerConnect(event) {
     // Remove connecting screen
     serverScreen.style.display = "none";
 }
-  
+
+// Server error callback
 function OnServerError(event) {
-    serverScreen.innerHTML = "<h1>Retrying connection...</h1><h2>attempt " + String(client.attempts) + "</h2>";
+    // Display retry screen
+    serverScreen.innerHTML = 
+        "<h1>Retrying connection...</h1><h2>attempt " + 
+        String(client.attempts) + "</h2>";
 } 
 
+// Server failure callback
 function OnServerFail() {
     console.log("Connection failed.");
-    serverScreen.innerHTML = "<h1>Connection failed</h1><h2>try again later ig</h2>";
+    serverScreen.innerHTML = "<h1>Connection failed</h1><h2>try again later</h2>";
 	failed = true;
-}
-
-window.onload = function() {
-    // Connect to server
-    console.log("Connecting to server " + address);
-    client = new ServerClient(address, OnServerConnect, OnServerRecieve, OnServerError, OnServerFail);
-
-    // Inital render for connection screen
-    render();
-
-    window.requestAnimationFrame(loop);
 }
 
 // Add event listeners
@@ -243,9 +238,15 @@ function MouseMoveEvent(event) {
     };
 }
 
+// ID used for while mouse down
 let mouseDownId = -1;
+
+// Event runs every .1 second while mouse is down
 function WhileMouseDown() {
+    // Ensure destination is not already set
     if(player.destination.set && player.destination.type == "planet") return;
+
+    // Apply new destination
     player.destination.x = (player.mouse.x - width / 2) / scale + player.x;
     player.destination.y = (player.mouse.y - height / 2) / scale + player.y;
     player.destination.zoom = player.zoom;
@@ -254,6 +255,7 @@ function WhileMouseDown() {
 }
 
 function OnMouseUp(event) {
+    // Remove while mouse down event
     if(mouseDownId != -1) {
         clearInterval(mouseDownId);
         mouseDownId=-1;
@@ -261,7 +263,10 @@ function OnMouseUp(event) {
 }
 
 function OnMouseDown(event) {
+    // Reset player destination
     player.destination.type = null;
+
+    // Handle while mouse down logic
     if(mouseDownId == -1)
         mouseDownId = setInterval(WhileMouseDown, 100);
 
@@ -297,3 +302,25 @@ canvas.addEventListener("touchmove", (event) => {
     if(event.touches.length > 1) return;
     MouseMoveEvent({clientX: event.touches[0].pageX, clientY: event.touches[0].pageY});
 });
+
+// Main entrypoint
+window.onload = function() {
+    // Connect to server
+    console.log("Connecting to server " + address);
+    client = new ServerClient(
+        address, 
+        OnServerConnect, 
+        OnServerRecieve, 
+        OnServerError, 
+        OnServerFail
+    );
+
+    // Inital render for connection screen
+    render();
+
+    // Create windows
+    windowManager.AddWindow(Window.FromPage("./pages/planet.html"));
+
+    // Start loop
+    window.requestAnimationFrame(loop);
+}
