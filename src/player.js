@@ -10,7 +10,7 @@ export class Player {
         this.zoom = 0.5;
         this.zoomVelocity = 1;
         this.rotation = 0;
-        this.ip = IPADDR;
+        this.ip = CLIENTID;
     }
 
     update(deltaTime) {
