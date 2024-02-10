@@ -1,7 +1,7 @@
 export class ServerClient {
     OnSocketOpen(event) {
         console.log("Socket opened");
-        this.socket.send(IPADDR);
+        this.socket.send(CLIENTID);
     }
     OnSocketError(event) {
         if(this.attempts === 4) {

@@ -28,8 +28,13 @@
 
             return $ipaddress;
         }
+
+        // Combine client ip and agent to form unique id
+        function get_client_id() {
+            return md5(get_client_ip() . $_SERVER['HTTP_USER_AGENT']);
+        }
         ?>
-        const IPADDR = "<?php echo get_client_ip(); ?>";
+        const CLIENTID = "<?php echo get_client_id(); ?>";
     </script>
 </head>
 
@@ -49,7 +54,7 @@
         <iframe class="content" src="pages/example.html"></iframe>
         <img class="resize" src="resources/resize.png" draggable="false">
     </div>
-	
+
     <div id="connect">
         <h1>Connecting to server...</h1>
     </div>
