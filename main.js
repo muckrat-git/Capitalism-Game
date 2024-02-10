@@ -1,8 +1,11 @@
-import { Planet } from './src/planets.js';
-import { Player } from './src/player.js';
 import { ServerClient } from './src/client.js';
 import { MathUtil } from './src/mathutil.js';
 import { WindowManager, Window } from './src/wm.js';
+import { Planet } from './src/planets.js';
+import { Player } from './src/player.js';
+
+// Time inbetween server calls
+const SERVER_PING_TIME = 0.1;
 
 // Player and players
 let player = new Player(0, 0);
@@ -12,11 +15,11 @@ let serverPlayers = Array();
 
 const solarSystems = new Array(
     new Planet(50, "resources/Sun.svg", {x: 0, y: 0}, new Array(
-		new Planet(18, "resources/World3.svg", {x: 0, y: 100}, new Array(
-			new Planet(4, "resources/Moon.svg", {x: 0, y: 18}),
-			new Planet(2, "resources/Moon.svg", {x: 0, y: 26})
-		))
-	))
+        new Planet(18, "resources/World3.svg", {x: 0, y: 100}, new Array(
+            new Planet(4, "resources/Moon.svg", {x: 0, y: 18}),
+            new Planet(2, "resources/Moon.svg", {x: 0, y: 26})
+        ))
+    ))
 );
 
 // Get canvas and canvas ctx
@@ -65,11 +68,11 @@ function update(deltaTime) {
     background.style.backgroundPositionX = String(width / 2 - player.x * player.zoom / 3) + "px";
     background.style.backgroundPositionY = String(height / 2 - player.y * player.zoom / 3) + "px";
 
-	// Update celestial bodies
-	for(let i = 0; i < solarSystems.length; i++) {
-		solarSystems[i].update(ctx, scale, deltaTime);
-	}
-	
+    // Update celestial bodies
+    for(let i = 0; i < solarSystems.length; i++) {
+        solarSystems[i].update(ctx, scale, deltaTime);
+    }
+
     // Update other players
     for(let i = 0; i < players.length; i++) {
         players[i].rotation = MathUtil.rLerp(players[i].rotation, serverPlayers[i].rotation, pingTime * 10);
@@ -81,31 +84,31 @@ function update(deltaTime) {
 }
 
 function renderSystem(orbitalSystem, parent) {
-	for(let i = 0; i < orbitalSystem.length; i++) {
-		orbitalSystem[i].render(ctx, scale, player, parent);
+    for(let i = 0; i < orbitalSystem.length; i++) {
+        orbitalSystem[i].render(ctx, scale, player, parent);
 
-		// Render sub-system
-		renderSystem(orbitalSystem[i].orbiters, orbitalSystem[i]);
+        // Render sub-system
+        renderSystem(orbitalSystem[i].orbiters, orbitalSystem[i]);
     }
 }
 
 function render() {
-  	// Get screen width and height
-	canvas.width = window.innerWidth;
+    // Get screen width and height
+    canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     width = canvas.width;
     height = canvas.height;
 
-	// Calculate rendering scale
-	scale = player.zoom * height / 100;
+    // Calculate rendering scale
+    scale = player.zoom * height / 100;
 
-	// Clear screen for rendering
+    // Clear screen for rendering
     ctx.clearRect(0, 0, width, height);
 
     // Render celestial bodies
-	renderSystem(solarSystems);
+    renderSystem(solarSystems);
 
-	// Draw player
+    // Draw player
     drawImageRot(ship, 0, 0, scale, scale, player.rotation);
 
     // Render other players
@@ -125,23 +128,23 @@ let failed = false;
 function loop(timestamp) {
     deltaTime = (timestamp - lastRender) / 1000;
 
-	// Stop looping if failed
-	if(failed) return;
+    // Stop looping if failed
+    if(failed) return;
 
     // Don't run updates if still connecting
     if(client.socket.readyState !== WebSocket.OPEN) {
-		// Just wait if busy connecting
-		if(client.socket.readyState === WebSocket.CONNECTING || client.active) {
-        	window.requestAnimationFrame(loop);
-        	return;
-		}
+        // Just wait if busy connecting
+        if(client.socket.readyState === WebSocket.CONNECTING || client.active) {
+            window.requestAnimationFrame(loop);
+            return;
+        }
 
-		serverScreen.style.display = "block";
-		serverScreen.innerHTML = 
-			"<h1>Connection failed</h1><h2>Reconnecting...</h2>";
-		client = new ServerClient(address, OnServerConnect, OnServerRecieve, OnServerError, OnServerFail);
-		window.requestAnimationFrame(loop);
-		return;
+        serverScreen.style.display = "block";
+        serverScreen.innerHTML = 
+            "<h1>Connection failed</h1><h2>Reconnecting...</h2>";
+        client = new ServerClient(address, OnServerConnect, OnServerRecieve, OnServerError, OnServerFail);
+        window.requestAnimationFrame(loop);
+        return;
     }
 
     // Queue update and render
@@ -163,7 +166,7 @@ function loop(timestamp) {
 
     // Run server exchange every .1 seconds
     pingTime += deltaTime;
-    if(pingTime > 0.1) {
+    if(pingTime > SERVER_PING_TIME) {
         // Send over own player data
         client.Send(JSON.stringify({"name": "player", "data": player}));
         pingTime = 0;
@@ -189,19 +192,19 @@ function OnServerRecieve(event) {
     if(!packet.hasOwnProperty("name")) return;
     if(!packet.hasOwnProperty("data")) return;
 
-	// Handle errors
-	if(packet.name == "error") {
-		serverScreen.style.display = "block";
-		serverScreen.innerHTML = "<h1>Server error</h1><h2>" + packet.data + "</h2>";
-		failed = true;
-		return;
-	}
+    // Handle errors
+    if(packet.name == "error") {
+        serverScreen.style.display = "block";
+        serverScreen.innerHTML = "<h1>Server error</h1><h2>" + packet.data + "</h2>";
+        failed = true;
+        return;
+    }
 
     // Handle playerdata packet
     if(packet.name == "players") {
         serverPlayers = packet.data;
         if(players.length !== serverPlayers.length) players = serverPlayers; 
-    
+
         // Copy initial velocity and nudge toward real xy
         for(let i = 0; i < serverPlayers.length; ++i) {
             players[i].xv = serverPlayers[i].xv;
@@ -231,7 +234,7 @@ function OnServerError(event) {
 function OnServerFail() {
     console.log("Connection failed.");
     serverScreen.innerHTML = "<h1>Connection failed</h1><h2>try again later</h2>";
-	failed = true;
+    failed = true;
 }
 
 // Add event listeners
