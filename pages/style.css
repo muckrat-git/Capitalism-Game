@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Russo+One&display=swap');
+
+body, html {
+    background: none;
+    overflow-x: hidden;
+}
+
+h1 {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.84);
+    font-family: 'Russo One', sans-serif;
+    font-weight: 400;
+}
+h2 {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: 'Russo One', sans-serif;
+    font-weight: lighter;
+    font-size: 100%;
+}
+
+p {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 80%;
+    font-family: 'Roboto Mono', monospace;
+}
+
+/* Chrome based browser scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: none;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(120, 120, 120, 0.1);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(120, 120, 120, 0.15);
+}

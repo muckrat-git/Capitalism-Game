@@ -2,6 +2,7 @@ import { Planet } from './src/planets.js';
 import { Player } from './src/player.js';
 import { ServerClient } from './src/client.js';
 import { MathUtil } from './src/mathutil.js';
+import { WindowManager } from './src/wm.js';
 
 // Player and players
 let player = new Player(0, 0);
@@ -32,6 +33,9 @@ canvas.height = window.innerHeight;
 let width = canvas.width;
 let height = canvas.height;
 let scale = 1;
+
+// Init window manager
+const windowManager = new WindowManager();
 
 const address = "wss://57c4516d-5b60-4b78-9fec-70283c0405f0-00-1z1geo8e7bi4n.janeway.replit.dev";
 
@@ -115,13 +119,28 @@ function render() {
 let lastRender = 0;	// Time of last render
 let pingTime = 0;   // Time since last server exchange
 
+let failed = false;
+
 function loop(timestamp) {
     deltaTime = (timestamp - lastRender) / 1000;
 
+	// Stop looping if failed
+	if(failed) return;
+
     // Don't run updates if still connecting
     if(client.socket.readyState !== WebSocket.OPEN) {
-        window.requestAnimationFrame(loop);
-        return;
+		// Just wait if busy connecting
+		if(client.socket.readyState === WebSocket.CONNECTING || client.active) {
+        	window.requestAnimationFrame(loop);
+        	return;
+		}
+
+		serverScreen.style.display = "block";
+		serverScreen.innerHTML = 
+			"<h1>Connection failed</h1><h2>Reconnecting...</h2>";
+		client = new ServerClient(address, OnServerConnect, OnServerRecieve, OnServerError, OnServerFail);
+		window.requestAnimationFrame(loop);
+		return;
     }
 
     update(deltaTime);
@@ -162,6 +181,14 @@ function OnServerRecieve(event) {
     if(!packet.hasOwnProperty("name")) return;
     if(!packet.hasOwnProperty("data")) return;
 
+	// Handle errors
+	if(packet.name === "error") {
+		serverScreen.style.display = "block";
+		serverScreen.innerHTML = "<h1>Server error</h1><h2>" + packet.data + "</h2>";
+		failed = true;
+		return;
+	}
+
     serverPlayers = packet.data;
     if(players.length !== serverPlayers.length) players = serverPlayers; 
     
@@ -187,6 +214,7 @@ function OnServerError(event) {
 function OnServerFail() {
     console.log("Connection failed.");
     serverScreen.innerHTML = "<h1>Connection failed</h1><h2>try again later ig</h2>";
+	failed = true;
 }
 
 window.onload = function() {
@@ -251,21 +279,21 @@ function OnMouseDown(event) {
 }
 
 // Mouse event listeners
-document.onmousemove = MouseMoveEvent;
-document.addEventListener("mousedown", OnMouseDown);
-document.addEventListener("mouseup", OnMouseUp);
-document.addEventListener("mouseout", OnMouseUp);
+canvas.onmousemove = MouseMoveEvent;
+canvas.addEventListener("mousedown", OnMouseDown);
+canvas.addEventListener("mouseup", OnMouseUp);
+canvas.addEventListener("mouseout", OnMouseUp);
 
 // Mobile device event listeners
-document.addEventListener("touchstart", (event) => {
+canvas.addEventListener("touchstart", (event) => {
     event.preventDefault();
     if(event.touches.length > 1) return;
     MouseMoveEvent({clientX: event.touches[0].pageX, clientY: event.touches[0].pageY});
     OnMouseDown(event);
 });
-document.addEventListener("touchend", OnMouseUp);
-document.addEventListener("touchcancel", OnMouseUp);
-document.addEventListener("touchmove", (event) => {
+canvas.addEventListener("touchend", OnMouseUp);
+canvas.addEventListener("touchcancel", OnMouseUp);
+canvas.addEventListener("touchmove", (event) => {
     if(event.touches.length > 1) return;
     MouseMoveEvent({clientX: event.touches[0].pageX, clientY: event.touches[0].pageY});
 });

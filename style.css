@@ -1,9 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Russo+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Russo+One&display=swap');
 
 html, body {
     margin: 0 !important;
     padding: 0 !important;
-    
     background-color: black;
 }
 
@@ -13,7 +12,7 @@ html, body {
     top:0;
     width:100%;
     height:100%;
-    
+
     background-image: url("resources/space.png");
 
     /* Create the parallax scrolling effect */
@@ -59,4 +58,68 @@ h2 {
     top:0;
     width:100%;
     height:100%;
+}
+
+.window {
+    position: absolute;
+    background-color: rgba(20, 20, 20, 0.7);
+    backdrop-filter: blur(2px);
+    outline: 1px solid rgba(255, 255, 255, 0.4);
+    overflow: hidden;
+}
+
+.title-bar {
+    width: 100%;
+    background-color: rgba(60, 60, 60, 0.4);
+    margin: 0;
+    padding: 5px 0px;
+    text-align: center;
+    height: 20px;
+}
+
+.window h1 {
+    margin: 0;
+}
+
+.window .resize {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 15px;
+    height: 15px;
+    cursor: nwse-resize;
+    opacity: 0.4;
+}
+
+.title-bar * {
+    font-size: 80%;
+    font-family: 'Roboto Mono', monospace;
+    display: inline-block;
+    color: rgba(255, 255, 255, 0.84);
+}
+
+.window .content {
+    width: 100%;
+    height: calc(100% - 30px);
+    border: none;
+}
+
+.window .controls {
+    padding: 0 5px;
+    margin: 0;
+    right: 0;
+    position: fixed;
+}
+
+.window .controls * {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    outline: none;
+}
+
+.window .controls *:hover {
+    color: rgba(255, 255, 255, 1);
 }

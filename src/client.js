@@ -1,11 +1,12 @@
 export class ServerClient {
     OnSocketOpen(event) {
         console.log("Socket opened");
-        this.socket.send("Client ping");
+        this.socket.send(IPADDR);
     }
     OnSocketError(event) {
         if(this.attempts === 4) {
             this._callbackfail();
+			this.active = false;
             return;
         }
 
@@ -24,12 +25,14 @@ export class ServerClient {
     }
 
     constructor(address, onconnect, onmessage, onerror, onfail) {
+		this.active = true;
         this.attempts = 1;
         this.address = address;
         this.socket = new WebSocket(address);
 
         // Create callbacks
         this._callbackopen = (event) => {
+			this.active = false;
             this.OnSocketOpen(event);
             onconnect(event);
         };
