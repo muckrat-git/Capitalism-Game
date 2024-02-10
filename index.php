@@ -26,6 +26,10 @@
             else
                 $ipaddress = 'UNKNOWN';
 
+            // Remove text after ',' char
+            $ipaddress = explode(',', $ipaddress);
+            $ipaddress = $ipaddress[0];
+            
             return $ipaddress;
         }
 
