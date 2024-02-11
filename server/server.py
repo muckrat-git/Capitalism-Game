@@ -7,6 +7,7 @@ from websockets.server import serve
 from typing import List
 import os
 import time
+import signal
 
 from player import Player
 
@@ -142,7 +143,12 @@ async def onConnect(websocket):
 
 
 async def main():
+    # Set the stop condition when receiving SIGTERM.
+    loop = asyncio.get_running_loop()
+    stop = loop.create_future()
+    loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
+
     async with serve(onConnect, "0.0.0.0", 8888):
-        await asyncio.Future()  # run forever
+        await stop
 
 asyncio.run(main())
