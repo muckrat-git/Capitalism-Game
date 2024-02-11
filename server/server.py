@@ -91,6 +91,7 @@ async def onConnect(websocket):
         if(command == "reboot"):
             print("Recieved reboot order")
             await websocket.close()
+            global reboot
             reboot = True
 
             # stop the asyncio task
