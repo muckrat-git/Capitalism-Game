@@ -5,7 +5,7 @@ import json
 from types import SimpleNamespace
 from websockets.server import serve
 from typing import List
-import os, subprocess
+import os
 import time
 import signal
 
@@ -165,4 +165,4 @@ asyncio.run(main())
 if(reboot):
     rebootcom = "bash reboot.sh"
     print("  $ " + rebootcom)
-    subprocess.Popen(rebootcom, shell=True)
+    os.system(rebootcom)
