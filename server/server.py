@@ -13,6 +13,8 @@ from player import Player
 
 # Wait some time for socket to be unused
 time.sleep(1)
+os.system("clear")
+print("Server started")
 
 playerAddress = list()
 playerIp = list()
