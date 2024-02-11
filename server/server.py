@@ -19,6 +19,7 @@ playerIp = list()
 players: List[Player] = list()
 
 stop = None
+reboot = False
 
 # request functions :
 class requestFunc:
@@ -89,11 +90,8 @@ async def onConnect(websocket):
             return
         if(command == "reboot"):
             print("Recieved reboot order")
-            rebootcom = "bash reboot.sh &"
-            print("  $ " + rebootcom)
             await websocket.close()
-
-            subprocess.Popen(rebootcom, shell=True)
+            reboot = True
 
             # stop the asyncio task
             stop.set_result(True)
@@ -162,3 +160,8 @@ async def main():
         await stop
 
 asyncio.run(main())
+
+if(reboot):
+    rebootcom = "bash reboot.sh"
+    print("  $ " + rebootcom)
+    subprocess.Popen(rebootcom, shell=True)
