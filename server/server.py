@@ -6,8 +6,12 @@ from types import SimpleNamespace
 from websockets.server import serve
 from typing import List
 import os
+import time
 
 from player import Player
+
+# Wait some time for socket to be unused
+time.sleep(1)
 
 playerAddress = list()
 playerIp = list()
@@ -79,7 +83,7 @@ async def onConnect(websocket):
             exit()
         if(command == "reboot"):
             print("Recieved reboot order")
-            rebootcom = "bash update.sh && python3 main.py"
+            rebootcom = "bash update.sh && python3 main.py &"
             print("  $ " + rebootcom)
             await websocket.close()
             os.system(rebootcom)
