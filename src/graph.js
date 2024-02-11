@@ -30,7 +30,7 @@ export class Graph {
         // Clear canvas with white
         ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+
         // Set line width
         ctx.lineWidth = 1;
 
@@ -56,7 +56,7 @@ export class Graph {
 
             // Skip if on last index
             if(i == this.x.length - 1) break;
-            
+
             // The original position of the point
             const a = {x:this.x[i], y:this.y[i]};
             // The original position of the next point
@@ -74,10 +74,10 @@ export class Graph {
 
             // Detirmine line color (green for up red for down)
             if(a.y > b.y)
-                ctx.strokeStyle = "rgba(255, 170, 0, 1)";
+                ctx.strokeStyle = "rgba(255, 0, 0, 1)";
             else
                 ctx.strokeStyle = "rgba(0, 255, 0, 1)";
-            
+
             // Draw line
             ctx.beginPath();
             ctx.moveTo(realA.x, realA.y);
