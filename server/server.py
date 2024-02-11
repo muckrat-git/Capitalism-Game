@@ -73,9 +73,9 @@ async def onConnect(websocket):
             return
 
         # Process stop and reboot first
-        if(command == "stop")
+        if(command == "stop"):
             exit()
-        if(command == "reboot")
+        if(command == "reboot"):
             os.system("bash update.sh && python3 main.py")
             exit()
     else:
