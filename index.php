@@ -47,7 +47,7 @@
     <canvas id="canvas"></canvas>
     <script type="module" src="main.js"></script>
 
-    <div class="window">
+    <!--<div class="window">
         <div class="title-bar">
             <h1>Test</h1>
             <div class="controls">
@@ -57,9 +57,9 @@
         </div>
         <iframe class="content" src="pages/example.html"></iframe>
         <img class="resize" src="resources/resize.png" draggable="false">
-    </div>
+    </div>-->
 
-    <div id="connect">
+    <div id="connect" style="z-index: 100">
         <h1>Connecting to server...</h1>
     </div>
 </body>

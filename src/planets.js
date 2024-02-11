@@ -7,9 +7,16 @@ function GetTime() {
 }
 
 export class Planet {
-    constructor(size, sprite, position, orbiters = new Array()) {
+    constructor(name, size, sprite, position, orbiters = new Array()) {
+        this.name = name;
         this.position = position;
         this.selected = false;
+
+        // Set location to none unless is star
+        this.location = "";
+        if(name.includes("Star")) {
+            this.location = "System " + name.replace("Star ", "");
+        }
 
 		// Orbital data
 		this.orbiters = orbiters;
@@ -86,8 +93,32 @@ export class Planet {
 				y: this.position.y + (this.orbiters[i].distance * Math.sin(rotation))
 			};
 
+            // Set location
+            if(this.orbiters[i].location == "")
+                this.orbiters[i].location = this.location;
+
 			// Update sub system
 			this.orbiters[i].update(ctx, scale, deltaTime);
 		}
 	}
+
+    // Get parameters for ./pages/planet.html
+    GetPageParam() {
+        const planet = this.name;
+        const src = this.sprite.src;
+        const owner = "dev";
+        const type = "N/A";
+        const location = this.location;
+        const composition = "<dt>Hydrogen</dt><dd>80%</dd><br><dt>Helium</dt><dd>15%</dd><br><dt>Nickel</dt><dd>5%</dd><br>";
+
+        // Assemble and return
+        return(
+            "planet=" + planet + 
+            "&src=" + src +
+            "&owner=" + owner + 
+            "&type=" + type + 
+            "&location=" + location + 
+            "&composition=" + composition
+        );
+    }
 }

@@ -14,10 +14,10 @@ let players = Array();
 let serverPlayers = Array();
 
 const solarSystems = new Array(
-    new Planet(50, "resources/Sun.svg", {x: 0, y: 0}, new Array(
-        new Planet(18, "resources/World3.svg", {x: 0, y: 100}, new Array(
-            new Planet(4, "resources/Moon.svg", {x: 0, y: 18}),
-            new Planet(2, "resources/Moon.svg", {x: 0, y: 26})
+    new Planet("Star 00-AA", 50, "resources/Sun.svg", {x: 0, y: 0}, new Array(
+        new Planet("Surpulo", 18, "resources/World3.svg", {x: 0, y: 100}, new Array(
+            new Planet("Teralus", 4, "resources/Moon.svg", {x: 0, y: 18}),
+            new Planet("Syle", 2, "resources/Moon.svg", {x: 0, y: 26})
         ))
     ))
 );
@@ -65,11 +65,12 @@ function drawImageRot(image, x, y, w, h, rotation) {
 function update(deltaTime) {
     const size = 40 + (player.zoom * 10);
     background.style.backgroundSize = String(size) + "vh";
-    background.style.backgroundPositionX = String(width / 2 - player.x * player.zoom / 3) + "px";
-    background.style.backgroundPositionY = String(height / 2 - player.y * player.zoom / 3) + "px";
+    background.style.backgroundPositionX = String(width / 2 - player.x * size / 1000) + "px";
+    background.style.backgroundPositionY = String(height / 2 - player.y * size / 1000) + "px";
 
     // Update celestial bodies
     for(let i = 0; i < solarSystems.length; i++) {
+        solarSystems[i].mouseDown = mouseDownId != -1;
         solarSystems[i].update(ctx, scale, deltaTime);
     }
 
@@ -155,10 +156,10 @@ function loop(timestamp) {
     if(keyDown['w'] || keyDown['a'] || keyDown['s'] || keyDown['d']) {
         player.destination.set = false;
 
-        if(keyDown['w']) player.velocity.y -= 300 * deltaTime / player.zoom;
-        if(keyDown['s']) player.velocity.y += 300 * deltaTime / player.zoom;
-        if(keyDown['a']) player.velocity.x -= 300 * deltaTime / player.zoom;
-        if(keyDown['d']) player.velocity.x += 300 * deltaTime / player.zoom;
+        if(keyDown['w']) player.velocity.y -= 300 * deltaTime;
+        if(keyDown['s']) player.velocity.y += 300 * deltaTime;
+        if(keyDown['a']) player.velocity.x -= 300 * deltaTime;
+        if(keyDown['d']) player.velocity.x += 300 * deltaTime;
     }
 
     // Update player
@@ -276,6 +277,23 @@ function OnMouseUp(event) {
     }
 }
 
+// Process click event for a planetery system
+function ClickEventSystem(event, system) {
+    // Find selected body
+    for(let i = 0; i < system.length; i++) {
+        if(system[i].selected) {
+            windowManager.AddWindow(Window.FromPage(
+                "./pages/planet.html?" + system[i].GetPageParam()
+            ));
+            return true;
+        }
+
+        // Process sub system
+        if(ClickEventSystem(event, system[i].orbiters)) return true;
+    }
+    return false;
+}
+
 function OnMouseDown(event) {
     // Reset player destination
     player.destination.type = null;
@@ -284,17 +302,8 @@ function OnMouseDown(event) {
     if(mouseDownId == -1)
         mouseDownId = setInterval(WhileMouseDown, 100);
 
-    // Find selected body
-    for(let i = 0; i < solarSystems.length; i++) {
-        if(solarSystems[i].selected) {
-            player.destination.x = solarSystems[i].position.x;
-            player.destination.y = solarSystems[i].position.y;
-            player.destination.zoom = solarSystems[i].size / 100;
-            player.destination.set = true;
-            player.destination.type = "planet";
-            return;
-        }
-    }
+    // Do solar system click event
+    if(ClickEventSystem(event, solarSystems)) return;
 }
 
 // Mouse event listeners
@@ -331,10 +340,6 @@ window.onload = function() {
 
     // Inital render for connection screen
     render();
-
-    // Create windows
-    windowManager.AddWindow(Window.FromPage("./pages/planet.html"));
-
     // Start loop
     window.requestAnimationFrame(loop);
 }

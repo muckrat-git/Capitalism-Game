@@ -5,29 +5,139 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
 
     <!-- Embed specific meta -->
-    <meta name="window" minw="166" minh="100" width="270" height="460" />
+    <meta name="window" minw="234" minh="200" width="375" height="300" />
     
     <link href="style.css" rel="stylesheet" type="text/css" />
     <title>Planet</title>
     <style>
-        .planet-info {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-        .planet-image {
+        /* Planet bio contains crucial info */
+        .planet-bio {
             width: 90%;
-            height: auto;
+            margin: 0;
+            text-align: center;
+        }
+        /* Planet info contains less important info */
+        .planet-info {
+            width: 100%;
+            margin: 0;
+            padding: 2vw;
+        }
+        /* Planet finance contains planet production metrics */
+        .planet-finance {
+        }
+        canvas {
+            outline: 1px solid rgba(255, 255, 255, 0.4);
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+        
+        .planet-image {
+            width: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: row;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h1 {
+            margin: 10% 0 0 0;
+            font-size: 100%;
+        }
+
+        .planet-bio p {
+            text-align: left;
+            margin-right: 4vw;
+            margin-left: 4vw;
+        }
+
+        /* Display spans on the right side */
+        span {
+            float: right;
+        }
+
+        /* Center button + margin */
+        button {
+            margin-top: 2vw;
+            float: center;
+        }
+
+        /* Add margin to lists */
+        dl {
+            margin-top: 4%;
+            margin-left: 10vw;
+        }
+        dl * {
+            margin: 0;
         }
     </style>
 </head>
 <body>
-    <div class="planet-info">
-        <h1>Planet</h1>
+    <div class="planet-bio">
+        <h1 id="title">Planet</h1>
         <img class="planet-image" src="../resources/World3.svg">
-        <p>Population: 7.9 billion</p>
-        <p>Location: Solar System, Milky Way</p>
+        <p>Owner: <span id="planet-owner">N/A</span></p>
+        <button>Manage</button>
     </div>
+    <div class="planet-info">
+        <p>Type: <span id="planet-type">Gas Giant</span></p>
+        <p>Location: <span id="planet-location">N/A</span></p>
+        <p style="margin: 0">Composition: </p>
+        <dl id="planet-composition">
+            <dt>Hydrogen</dt><dd>80%</dd><br><dt>Helium</dt><dd>15%</dd><br><dt>Nickel</dt><dd>5%</dd><br>
+        </dl>
+
+        <!-- Div containing planet production details -->
+        <div class="planet-finance">
+            <canvas id="graph"></canvas>
+        </div>
+    </div>
+
+    <!-- Graph content loader module -->
+    <script type="module">
+        import { Graph } from "../src/graph.js";
+        
+        window.onload = function(){
+            // Get queryString
+            const queryString = window.location.search;
+            
+            // Apply url arguments
+            const urlParams = new URLSearchParams(queryString);
+            const planet = urlParams.get("planet");
+            const owner = urlParams.get("owner");
+            const type = urlParams.get("type");
+            const location = urlParams.get("location");
+            const src = urlParams.get("src");
+
+            // Set planet info
+            document.title = planet;
+            document.getElementById("title").innerHTML = planet;
+            document.getElementById("planet-owner").innerHTML = owner;
+            document.getElementById("planet-type").innerHTML = type;
+            document.getElementById("planet-location").innerHTML = location;
+            const images = document.getElementsByClassName("planet-image");
+            for(let i = 0; i < images.length; i++) {
+                images[i].src = src;
+            }
+
+            // Get composition data from url args (stored as plain html)
+            const composition = urlParams.get("composition");
+            document.getElementById("planet-composition").innerHTML = composition;
+            
+            // Make dummy graph data
+            let data = {
+                x: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                y: [0, 4, 7, 13, 12, 10, 20, 24, 29, 29, 28, 33]
+            };
+            
+            // Create graph obj from json string of data
+            const graph = new Graph(JSON.stringify(data));
+            graph.Draw(document.getElementById("graph"));
+        };
+    </script>
 </body>
 </html>

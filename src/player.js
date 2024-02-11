@@ -26,9 +26,8 @@ export class Player {
         if(this.zoom < 0.01) this.zoom = 0.01;
 
         if(this.destination.set) {
-            this.velocity = {x: 0, y: 0};
-            this.x = MathUtil.lerp(this.x, this.destination.x, deltaTime * 3);
-            this.y = MathUtil.lerp(this.y, this.destination.y, deltaTime * 3);
+            this.velocity.x += Math.cos(this.rotation) * 300 * deltaTime;
+            this.velocity.y += Math.sin(this.rotation) * 300 * deltaTime;
 
             this.rotation = MathUtil.rLerp(
 				this.rotation, 
@@ -37,6 +36,10 @@ export class Player {
 			);
 
             this.zoom = MathUtil.lerp(this.zoom, this.destination.zoom, deltaTime * 2);
+
+            if(MathUtil.distance(this.x, this.y, this.destination.x, this.destination.y) < 300 * deltaTime) {
+                this.destination.set = false;
+            }
         }
         else this.rotation = Math.atan2(this.velocity.y, this.velocity.x);
     }
