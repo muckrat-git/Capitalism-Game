@@ -5,6 +5,7 @@ import json
 from types import SimpleNamespace
 from websockets.server import serve
 from typing import List
+import os
 
 from player import Player
 
@@ -66,7 +67,7 @@ async def onConnect(websocket):
         command = recv.split(" ")[2]
 
         # Ensure auth is correct (from env)
-        if(auth != getenv("ADMIN_AUTH")):
+        if(auth != os.environ['ADMIN_AUTH']):
             await websocket.send("Invalid auth")
             await websocket.close()
             return
