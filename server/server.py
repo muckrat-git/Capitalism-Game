@@ -83,7 +83,7 @@ async def onConnect(websocket):
             exit()
         if(command == "reboot"):
             print("Recieved reboot order")
-            rebootcom = "bash update.sh && python3 main.py &"
+            rebootcom = "bash reboot.sh &"
             print("  $ " + rebootcom)
             await websocket.close()
             os.system(rebootcom)
