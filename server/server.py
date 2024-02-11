@@ -5,7 +5,7 @@ import json
 from types import SimpleNamespace
 from websockets.server import serve
 from typing import List
-import os
+import os, subprocess
 import time
 import signal
 
@@ -17,6 +17,8 @@ time.sleep(1)
 playerAddress = list()
 playerIp = list()
 players: List[Player] = list()
+
+stop = None
 
 # request functions :
 class requestFunc:
@@ -81,14 +83,21 @@ async def onConnect(websocket):
         if(command == "stop"):
             print("Recieved stop order, shutting down")
             await websocket.close()
-            exit()
+
+            # stop the asyncio task
+            stop.set_result(True)
+            return
         if(command == "reboot"):
             print("Recieved reboot order")
             rebootcom = "bash reboot.sh &"
             print("  $ " + rebootcom)
             await websocket.close()
-            os.system(rebootcom)
-            exit()
+
+            subprocess.Popen(rebootcom, shell=True)
+
+            # stop the asyncio task
+            stop.set_result(True)
+            return
 
         print("Unknown admin command: " + command)
         await websocket.close()
@@ -145,6 +154,7 @@ async def onConnect(websocket):
 async def main():
     # Set the stop condition when receiving SIGTERM.
     loop = asyncio.get_running_loop()
+    global stop
     stop = loop.create_future()
     loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
 
