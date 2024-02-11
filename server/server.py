@@ -57,7 +57,28 @@ async def handleMessage(message, websocket):
 async def onConnect(websocket):
 	await websocket.send("Connection established!")
 
-	ip = await websocket.recv()
+	recv = await websocket.recv()
+
+    # Check if message is admin command
+    if(recv.startswith("% ")):
+        # Get command and auth
+        auth = recv.split(" ")[1]
+        command = recv.split(" ")[2]
+
+        # Ensure auth is correct (from env)
+        if(auth != getenv("ADMIN_AUTH")):
+            await websocket.send("Invalid auth")
+            await websocket.close()
+            return
+
+        # Process stop and reboot first
+        if(command == "stop")
+            exit()
+        if(command == "reboot")
+            os.system("bash update.sh && python3 main.py")
+            exit()
+    else:
+        ip = recv    
 	print("Connecting to socket: " + str(websocket.remote_address) + " -> " + ip)
 
 	# Ensure no same ip
@@ -108,6 +129,5 @@ async def onConnect(websocket):
 async def main():
 	async with serve(onConnect, "0.0.0.0", 8888):
 		await asyncio.Future()  # run forever
-
 
 asyncio.run(main())
