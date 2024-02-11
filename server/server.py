@@ -74,10 +74,20 @@ async def onConnect(websocket):
 
         # Process stop and reboot first
         if(command == "stop"):
+            print("Recieved stop order, shutting down")
+            websocket.close()
             exit()
         if(command == "reboot"):
-            os.system("bash update.sh && python3 main.py")
+            print("Recieved reboot order")
+            rebootcom = "bash update.sh && python3 main.py"
+            print("  $ " + rebootcom)
+            os.system(rebootcom)
+            websocket.close()
             exit()
+
+        print("Unknown admin command: " + command)
+        websocket.close()
+        return
     else:
         ip = recv    
     print("Connecting to socket: " + str(websocket.remote_address) + " -> " + ip)
