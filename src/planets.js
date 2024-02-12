@@ -95,21 +95,33 @@ export class Planet {
                 ctx.setLineDash([]);
             }
             else {
-                ctx.strokeStyle = "rgba(200, 230, 255, 0.05)";
+                ctx.strokeStyle = "rgba(200, 230, 255, 0.1)";
                 ctx.setLineDash([scale, scale]);
             }
 			ctx.stroke();
 		}
         
 		if(this.selected) {
+            // Apply border circle around planet
+            ctx.beginPath();
+            let rotation = (GetTime() * 5 / this.size) % (Math.PI * 2);
+            ctx.arc(
+                this.drawPos.x + hsize, 
+                this.drawPos.y + hsize, 
+                hsize * 1.1 + scale,
+                0 + rotation, 2 * Math.PI + rotation, false
+            );
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = "rgba(160, 230, 255, 0.3)";
+            ctx.setLineDash([hsize * 1.1 + scale, hsize * 1.1 + scale])
+            ctx.stroke();
+            
 			// Render planet
-			ctx.filter = "brightness(110%)";
 			ctx.drawImage(
 				this.sprite, 
 				this.drawPos.x, this.drawPos.y, 
 				this.size * scale, this.size * scale
 			);
-			ctx.filter = "brightness(100%)";
 			return;
 		}
 
@@ -147,10 +159,16 @@ export class Planet {
     GetPageParam() {
         const planet = this.name;
         const src = this.sprite.src;
-        const owner = "dev";
-        const type = "N/A";
+        const owner = this.owner;
+        const type = this.type;
         const location = this.location;
-        const composition = "<dt>Hydrogen</dt><dd>80%</dd><br><dt>Helium</dt><dd>15%</dd><br><dt>Nickel</dt><dd>5%</dd><br>";
+
+        // Convert composition dict into html
+        let composition = "";
+        for(let i = 0; i < Object.keys(this.composition).length; i++) {
+            composition += "<dt>" + Object.keys(this.composition)[i] + "</dt><dd>" +
+                Object.values(this.composition)[i] + "%</dd><br>";
+        }
 
         // Assemble and return
         return(

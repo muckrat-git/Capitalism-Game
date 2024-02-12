@@ -262,9 +262,6 @@ let mouseDownId = -1;
 
 // Event runs every .1 second while mouse is down
 function WhileMouseDown() {
-    // Ensure destination is not already set
-    if(player.destination.set && player.destination.type == "planet") return;
-
     // Apply new destination
     player.destination.x = (player.mouse.x - width / 2) / scale + player.x;
     player.destination.y = (player.mouse.y - height / 2) / scale + player.y;
