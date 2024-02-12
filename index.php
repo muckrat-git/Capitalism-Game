@@ -45,7 +45,7 @@
 <body>
     <div id="space"></div>
     <canvas id="canvas"></canvas>
-    <script type="module" src="main.js"></script>
+    <script type="module" src="main.js?random=<?php echo filemtime('main.js');?>"></script>
 
     <!--<div class="window">
         <div class="title-bar">

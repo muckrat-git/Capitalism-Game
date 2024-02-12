@@ -7,7 +7,8 @@ function GetTime() {
 }
 
 export class Planet {
-    constructor(name, size, sprite, position, orbiters = new Array()) {
+    // Legacy dev constructor
+    /*constructor(name, size, sprite, position, orbiters = new Array()) {
         this.name = name;
         this.position = position;
         this.selected = false;
@@ -28,6 +29,39 @@ export class Planet {
         this.sprite = new Image();
         this.sprite.src = sprite;
 		this.drawPos = {x:0, y:0};
+
+        this.owner = "";
+        this.type = "";
+        this.composition = {};
+        this.production = {};
+    }*/
+
+    constructor(json) {
+        this.name = json.name;
+        this.position = json.position;
+        this.selected = json.selected;
+
+		// Orbital data
+        this.location = "Sector " + json.location;
+        this.orbit = 0
+        this.distance = MathUtil.distance(0, 0, this.position.x, this.position.y);
+
+		// Rendering data
+		this.size = json.size;
+        this.sprite = new Image();
+        this.sprite.src = json.sprite;
+		this.drawPos = {x:0, y:0};
+
+        this.owner = json.owner;
+        this.type = json.type;
+        this.composition = json.composition;
+        this.production = json.production;
+
+        // Finally, construct orbiters
+        this.orbiters = new Array();
+        for(let i = 0; i < json.children.length; i++) {
+            this.orbiters.push(new Planet(json.children[i]));
+        }
     }
 
     render(ctx, scale, player, parent) {
@@ -45,22 +79,29 @@ export class Planet {
 			player.mouse.x, 
 			player.mouse.y) < hsize;
 
-        if(this.selected) {
-			// Check if orbiting
-			if(parent != null) {
-				// Visualize orbit
-				ctx.arc(
-					parent.drawPos.x + parent.size * scale / 2, 
-					parent.drawPos.y + parent.size * scale / 2, 
-					this.distance * scale, 0, 2 * Math.PI, false
-				);
-				ctx.fillStyle = "rgba(0, 0, 0, 0)";
-				ctx.fill();
-				ctx.lineWidth = 2;
-				ctx.strokeStyle = "rgba(200, 230, 255, 0.25)";
-				ctx.stroke();
-			}
-			
+        
+		// Check if orbiting
+		if(parent != null) {
+			// Visualize orbit
+            ctx.beginPath();
+			ctx.arc(
+				parent.drawPos.x + parent.size * scale / 2, 
+				parent.drawPos.y + parent.size * scale / 2, 
+				this.distance * scale, 0, 2 * Math.PI, false
+			);
+            ctx.lineWidth = 2;
+            if(this.selected) {
+			    ctx.strokeStyle = "rgba(200, 230, 255, 0.2)";
+                ctx.setLineDash([]);
+            }
+            else {
+                ctx.strokeStyle = "rgba(200, 230, 255, 0.05)";
+                ctx.setLineDash([scale, scale]);
+            }
+			ctx.stroke();
+		}
+        
+		if(this.selected) {
 			// Render planet
 			ctx.filter = "brightness(110%)";
 			ctx.drawImage(
@@ -81,10 +122,10 @@ export class Planet {
     }
 
 	update(ctx, scale, deltaTime) {
-		this.orbit = GetTime() * ORBIT_RATE * 100;
+		this.orbit = GetTime() * ORBIT_RATE;
 		for(let i = 0; i < this.orbiters.length; i++) {
 			// Find spot in orbit
-			let rotation = this.orbit / (this.orbiters[i].distance * this.orbiters[i].distance);
+			let rotation = this.orbit / this.orbiters[i].distance + this.orbiters[i].distance;
 			rotation += i / this.orbiters.length * Math.PI * 2;
 
 			// Set new position

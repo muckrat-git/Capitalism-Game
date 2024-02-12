@@ -14,12 +14,12 @@ let players = Array();
 let serverPlayers = Array();
 
 const solarSystems = new Array(
-    new Planet("Star 00-AA", 50, "resources/Sun.svg", {x: 0, y: 0}, new Array(
+    /*new Planet("Star 00-AA", 50, "resources/Sun.svg", {x: 0, y: 0}, new Array(
         new Planet("Surpulo", 18, "resources/World3.svg", {x: 0, y: 100}, new Array(
             new Planet("Teralus", 4, "resources/Moon.svg", {x: 0, y: 18}),
             new Planet("Syle", 2, "resources/Moon.svg", {x: 0, y: 26})
         ))
-    ))
+    ))*/
 );
 
 // Get canvas and canvas ctx
@@ -212,12 +212,16 @@ function OnServerRecieve(event) {
             players[i].yv = serverPlayers[i].yv;
         }
     }
+    // Handle solar system packet
+    if(packet.name == "solar") {
+        solarSystems.push(new Planet(packet.data));
+    }
 }
 
 // Server succesfully connected
 function OnServerConnect(event) {
-    // Send inital player data
-    client.Send(JSON.stringify({"name": "player", "data": player}));
+    // Send inital solar request
+    client.Send(JSON.stringify({"name": "sector", "data": {x:0, y:0}}));
 
     // Remove connecting screen
     serverScreen.style.display = "none";
