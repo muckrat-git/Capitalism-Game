@@ -11,6 +11,7 @@ export class Player {
         this.zoomVelocity = 1;
         this.rotation = 0;
         this.ip = CLIENTID;
+        this.speed = 300;
     }
 
     update(deltaTime) {
@@ -26,8 +27,8 @@ export class Player {
         if(this.zoom < 0.01) this.zoom = 0.01;
 
         if(this.destination.set) {
-            this.velocity.x += Math.cos(this.rotation) * 300 * deltaTime;
-            this.velocity.y += Math.sin(this.rotation) * 300 * deltaTime;
+            this.velocity.x += Math.cos(this.rotation) * this.speed * deltaTime;
+            this.velocity.y += Math.sin(this.rotation) * this.speed * deltaTime;
 
             this.rotation = MathUtil.rLerp(
 				this.rotation, 

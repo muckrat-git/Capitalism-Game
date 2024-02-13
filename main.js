@@ -30,6 +30,8 @@ let ctx = canvas.getContext("2d");
 let background = document.getElementById("space");
 let serverScreen = document.getElementById("connect");
 
+let sector = {x:0,y:0};
+
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
@@ -81,6 +83,21 @@ function update(deltaTime) {
         players[i].y += players[i].yv * deltaTime;
         players[i].x = MathUtil.lerp(players[i].x, serverPlayers[i].x, 0.1);
         players[i].y = MathUtil.lerp(players[i].y, serverPlayers[i].y, 0.1);
+    }
+
+    // Check if a new sector is reached
+    const SECTORSIZE = 10000;
+    if( sector.x != Math.round(player.x / SECTORSIZE) || 
+        sector.y != Math.round(player.y / SECTORSIZE)) 
+    {
+        console.log("REQUEST" + sector);
+        sector = {
+            x: Math.round(player.x / SECTORSIZE),
+            y: Math.round(player.y / SECTORSIZE)
+        }
+
+        // Request new solar system
+        client.Send(JSON.stringify({"name": "sector", "data": sector}));
     }
 }
 
@@ -152,14 +169,20 @@ function loop(timestamp) {
     update(deltaTime);
     render();
 
+    // Change player speed if ctrl down
+    if(keyDown['Control']) {
+        player.speed = 3000;
+    }
+    else player.speed = 300;
+
     // Check if movement
     if(keyDown['w'] || keyDown['a'] || keyDown['s'] || keyDown['d']) {
         player.destination.set = false;
 
-        if(keyDown['w']) player.velocity.y -= 300 * deltaTime;
-        if(keyDown['s']) player.velocity.y += 300 * deltaTime;
-        if(keyDown['a']) player.velocity.x -= 300 * deltaTime;
-        if(keyDown['d']) player.velocity.x += 300 * deltaTime;
+        if(keyDown['w']) player.velocity.y -= player.speed * deltaTime;
+        if(keyDown['s']) player.velocity.y += player.speed * deltaTime;
+        if(keyDown['a']) player.velocity.x -= player.speed * deltaTime;
+        if(keyDown['d']) player.velocity.x += player.speed * deltaTime;
     }
 
     // Update player
@@ -214,6 +237,7 @@ function OnServerRecieve(event) {
     }
     // Handle solar system packet
     if(packet.name == "solar") {
+        if(solarSystems.length > 1) solarSystems.splice(0, 1);
         solarSystems.push(new Planet(packet.data));
     }
 }
