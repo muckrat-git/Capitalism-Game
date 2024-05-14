@@ -6,15 +6,17 @@ export class Player {
         this.y = y;
         this.velocity = {x: 0, y: 0};
         this.mouse = {x:0, y:0};
-        this.destination = {x:0, y:0, set:false, type:null};
+        this.absMouse = {x:0, y:0};
         this.zoom = 0.5;
         this.zoomVelocity = 1;
         this.rotation = 0;
         this.ip = CLIENTID;
         this.speed = 300;
+        this.money = 0;
+        this.resources = Array();
     }
 
-    update(deltaTime) {
+    update(deltaTime, mouseDown) {
         this.x += this.velocity.x * deltaTime;
         this.y += this.velocity.y * deltaTime;
 
@@ -26,22 +28,22 @@ export class Player {
 
         if(this.zoom < 0.01) this.zoom = 0.01;
 
-        if(this.destination.set) {
+        if(mouseDown) {
             this.velocity.x += Math.cos(this.rotation) * this.speed * deltaTime;
             this.velocity.y += Math.sin(this.rotation) * this.speed * deltaTime;
 
             this.rotation = MathUtil.rLerp(
-				this.rotation, 
-				Math.atan2(this.destination.y - this.y, this.destination.x - this.x), 
-				deltaTime * 10
-			);
-
-            this.zoom = MathUtil.lerp(this.zoom, this.destination.zoom, deltaTime * 2);
-
-            if(MathUtil.distance(this.x, this.y, this.destination.x, this.destination.y) < 300 * deltaTime) {
-                this.destination.set = false;
-            }
+                this.rotation, 
+                Math.atan2(this.mouse.y - this.y, this.mouse.x - this.x), 
+                deltaTime * 10
+            );
         }
-        else this.rotation = Math.atan2(this.velocity.y, this.velocity.x);
+        else {
+            this.rotation = MathUtil.rLerp(
+                this.rotation, 
+                Math.atan2(this.velocity.y, this.velocity.x), 
+                deltaTime * 10
+            );
+        }
     }
 };

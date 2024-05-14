@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+
+    <!-- Embed specific meta -->
+    <meta name="window" minw="200" minh="200" width="450" height="330" />
+
+    <link href="style.css" rel="stylesheet" type="text/css" />
+    <title>Manage</title>
+    <style>
+        h1 {
+            font-size: 100%;
+        }
+
+        #tab {
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            top: 0;
+            transition: top 0.2s;
+            background-color: rgba(60, 60, 60, 0.7);
+        }
+
+        .bevel {
+            width: 100%;
+            background-color: rgba(60, 60, 60, 0.4);
+        }
+
+        .backbar {
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            position: absolute;
+        }
+        
+        #tabs {
+            position: absolute;
+            width: 30px;
+            height: 100vh;
+        }
+
+        #tabs button {
+            padding: 2.5px;
+            margin: 0;
+            width: 30px;
+            height: 30px;
+            outline: none;
+            border: none;
+            background-color: transparent;
+            box-shadow: none;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            backdrop-filter: none;
+        }
+
+        #tabs button:hover {
+            opacity: 0.6;
+        }
+
+        #tabs button img {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+
+        #tab-name {
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: calc((30px - 12px) / 4);
+            margin: 0;
+            height: 30px;
+            font-size: 12px;
+            transition: left 0.1s;
+        }
+
+        section {
+            position: relative;
+            padding: 30px 60px;
+            margin-left: 30px;
+            width: calc(100% - 150px);
+            height: calc(100% - 60px);
+            overflow: hidden;
+        }
+
+        #info-box {
+            position: relative;
+            padding-top: 2px;
+            width: 100%;
+            height: 90px;
+            outline: 1px solid rgba(255, 255, 255, 0.4);
+            background-color: rgba(60, 60, 60, 0.4);
+        }
+
+        #info-box * {
+            margin: 3px;
+            padding: 0;
+        }
+
+        #info-cost {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+        }
+
+        #info-purchase {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+        }
+
+        #info-amount {
+            margin: 0;
+            padding: 0;
+        }
+
+        button {
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #items button {
+            width: 30px;
+            height: 30px;
+            margin-right: 15px;
+            margin-top: 30px;
+            outline: 1px solid rgba(255, 255, 255, 0.4);
+            background-color: rgba(60, 60, 60, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div id="tabs">
+        <div class="backbar">
+            <div class="bevel"></div>
+            <div id="tab"></div>
+            <div class="bevel" style="margin-top: 30px;"></div>
+        </div>
+
+        <!-- Icon Buttons -->
+        <button onclick="onTabClick(this, 0)"> 
+            <img src="../resources/icons/drill.png" alt="Drills" />
+        </button>
+        <button onclick="onTabClick(this, 1)"> 
+            <img src="../resources/icons/gas.png" alt="Gasses" />
+        </button>
+    </div>
+
+    <section>
+        <p id="tab-name">Drills</p>
+
+        <div id="info-box">
+            <p id="info-desc">Basic common resource mining drill</p>
+            <p id="info-resources">Can mine: Raw metals</p>
+            <p id="info-requires">Requires: None</p>
+
+            <div id="info-cost">
+                <span id="info-holding">$168</span>
+                <span id="info-per"></span>
+            </div>
+            <div id="info-purchase">
+                <button style="color: rgba(255, 180, 180, 0.8);">-10</button>
+                <button style="color: rgba(255, 180, 180, 0.8);">-1</button>
+                <span id="info-amount">12</span>
+                <button style="color: rgba(180, 255, 210, 0.8);">+1</button>
+                <button style="color: rgba(180, 255, 210, 0.8);">+10</button>
+            </div>
+        </div>
+
+        <div id="items">
+            
+        </div>
+    </section>
+    <script type="text/javascript">
+        // Update page title
+        document.title = "Manage " + 
+            new URLSearchParams(window.location.search).get('planet');
+
+        const per = 14;
+
+        function onPageChange() {
+            // Get items
+            const items = document.getElementById('items');
+
+            // Add drill items
+            for(let i = 0; i < 11; i++) {
+                const item = document.createElement('button');
+                items.appendChild(item);
+            }
+        }
+        onPageChange();
+
+        // Get all button inside id 'info-purchase'
+        let purchaseBtns = document.querySelectorAll('#info-purchase button');
+
+        const infoPer = document.getElementById('info-per');
+
+        function purchaseHover(button) {
+            // Get numerical value of button content
+            let amount = parseInt(button.textContent);
+
+            // Get sign
+            let sign = amount > 0 ? '+' : '-';
+            amount = Math.abs(amount);
+            
+            // Set info per
+            infoPer.innerHTML = 
+                "(" + sign +" $" + (per * amount) + ")";
+
+            // Change color to match
+            infoPer.style.color = button.style.color;
+        }
+        function purchaseClick(button) {
+            
+        }
+
+        // Add functions to purchaseBtns
+        for(let i = 0; i < purchaseBtns.length; i++) {
+            purchaseBtns[i].onmouseover = () => {purchaseHover(purchaseBtns[i])};
+            purchaseBtns[i].onmouseleave = () => {infoPer.innerHTML = ""}
+            purchaseBtns[i].onclick = () => {purchaseClick(purchaseBtns[i])};
+        }
+        
+        function onTabClick(tab) {
+            // Move tab to clicked tab
+            document.getElementById("tab").style.top = tab.offsetTop + "px";
+            const tabname = document.getElementById("tab-name");
+            const tabnametext = tab.children[0].alt;
+
+            // Dont continue if already selected
+            if(tabnametext == tabname.innerHTML) return;
+        
+            // Move tab-name off screen
+            tabname.style.left = -tabname.offsetWidth + "px";
+
+            // Callback to change name an move it on screen
+            setTimeout(() => {
+                tabname.style.left = "0px"; 
+                tabname.innerHTML = tabnametext;
+                tabname.style.top = tab.offsetTop + "px";
+            }, 100);
+        }
+        
+        let planet = null;
+        let planetID = "";
+        function getPlanet(systems, planetNames) {
+            // Get planet 
+            const p = systems.find(s => s.name == planetNames[0]);
+
+            // Delete first entry of planet names
+            planetNames.shift();
+
+            // If no more names or null, finish
+            if(planetNames.length == 0 || p == null) return p;
+            else return getPlanet(p.orbiters, planetNames);
+        }
+        
+        function update(player, serverPlayers, solarSystems) {
+            // Fit bevels
+            const tab = document.getElementById("tab");
+            const bevels = document.getElementsByClassName("bevel");
+            bevels[0].style.height = tab.getBoundingClientRect().top + "px";
+            bevels[1].style.height = "calc(100% - " + 
+                tab.getBoundingClientRect().bottom + "px)";
+            
+            if(planet == null) {
+                // Get planet id from url args
+                planetID = new URLSearchParams(window.location.search).get('planet');
+
+                // Seperate list of planet names (by '-')
+                const planetNames = planetID.split('-');
+
+                // Ensure there are planet names
+                if(planetNames.length == 0) {
+                    console.error("Invalid planet id '" + planetID + "'");
+                    planet = "failed";
+                    return;
+                }
+
+                // Add star to names
+                planetNames[0] = "Star " + planetNames[0];
+
+                // Get planet
+                planet = getPlanet(solarSystems, planetNames);
+
+                // Fail if null
+                if(planet == null) {
+                    console.error("Failed to find planet id '" + planetID + "'");
+                    planet = "failed";
+                }
+                return;
+            }
+        }
+    </script>
+</body>
+</html>

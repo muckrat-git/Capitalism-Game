@@ -70,7 +70,7 @@ export class Window {
     }
 
     // Constructs a window from a page url
-    static FromPage(url) {
+    static FromPage(url, postLoad) {
         // Create elem and set class
         const elem = document.createElement("div");
         elem.className = "window";
@@ -102,11 +102,14 @@ export class Window {
         elem.appendChild(resize);
 
         // Return window
-        return new Window(elem);
+        return new Window(elem, postLoad);
     }
 
     // Default window constructor
-    constructor(element) {
+    constructor(element, postLoad) {
+        this.onclose = null;
+        this.postLoad = postLoad;
+        
         this.dragging = false;
         this.resizing = false;
         this.element = element;
@@ -152,6 +155,7 @@ export class Window {
             this.ToggleRolled();
         });
         this.controls.children[1].addEventListener("click", () => {
+            if(this.onclose != null) this.onclose();
             this.element.remove();
         });
 
@@ -217,6 +221,9 @@ export class Window {
         // Set min bounds
         if(this.embed != null) {
             this.embed.addEventListener("load", (event) => {
+                // Run post load if exists
+                if(this.postLoad != null) this.postLoad(this.embed.contentWindow);
+
                 // Make element visible
                 this.element.style.display = "block";
                 
@@ -277,6 +284,9 @@ export class WindowManager {
     // Add windows constructed in javascript
     AddWindow(window) {
         document.body.appendChild(window.element);
+        window.onclose = () => {
+            this.windows.splice(this.windows.indexOf(window), 1);
+        };
         this.windows.push(window);
     }
     

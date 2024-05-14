@@ -23,22 +23,24 @@
                 $ipaddress = $_SERVER['HTTP_FORWARDED'];
             else if(isset($_SERVER['REMOTE_ADDR']))
                 $ipaddress = $_SERVER['REMOTE_ADDR'];
-            else
-                $ipaddress = 'UNKNOWN';
 
             // Remove text after ',' char
             $ipaddress = explode(',', $ipaddress);
             $ipaddress = $ipaddress[0];
-            
+
             return $ipaddress;
         }
 
         // Combine client ip and agent to form unique id
         function get_client_id() {
-            return md5(get_client_ip() . $_SERVER['HTTP_USER_AGENT']);
+            return md5(get_client_ip() . uniqid());
         }
         ?>
-        const CLIENTID = "<?php echo get_client_id(); ?>";
+        let CLIENTID = localStorage.getItem("USERID");
+        if(CLIENTID == null) {
+            CLIENTID = "<?php echo get_client_id(); ?>";
+            localStorage.setItem("USERID", CLIENTID);
+        }
     </script>
 </head>
 
@@ -58,6 +60,8 @@
         <iframe class="content" src="pages/example.html"></iframe>
         <img class="resize" src="resources/resize.png" draggable="false">
     </div>-->
+
+    <div id="money">$0</div>
 
     <div id="connect" style="z-index: 100">
         <h1>Connecting to server...</h1>

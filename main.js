@@ -6,6 +6,9 @@ import { Player } from './src/player.js';
 
 // Time inbetween server calls
 const SERVER_PING_TIME = 0.1;
+const SERVER_LOOP_PING = 5000;
+
+const SECTORSIZE = 10000;
 
 // Player and players
 let player = new Player(0, 0);
@@ -65,6 +68,13 @@ function drawImageRot(image, x, y, w, h, rotation) {
 }
 
 function update(deltaTime) {
+    // Update world space mouse
+    player.mouse = {
+        x: (player.absMouse.x - width / 2) / scale + player.x,
+        y: (player.absMouse.y - height / 2) / scale + player.y,
+    };
+    
+    // Apply sizing
     const size = 40 + (player.zoom * 10);
     background.style.backgroundSize = String(size) + "vh";
     background.style.backgroundPositionX = String(width / 2 - player.x * size / 1000) + "px";
@@ -76,6 +86,13 @@ function update(deltaTime) {
         solarSystems[i].update(ctx, scale, deltaTime);
     }
 
+    // Update windows
+    windowManager.windows.forEach((window) => {
+        if(window.embed != null && window.embed.contentWindow.update != null) {
+            window.embed.contentWindow.update(player, serverPlayers, solarSystems);
+        }
+    });
+
     // Update other players
     for(let i = 0; i < players.length; i++) {
         players[i].rotation = MathUtil.rLerp(players[i].rotation, serverPlayers[i].rotation, pingTime * 10);
@@ -86,7 +103,6 @@ function update(deltaTime) {
     }
 
     // Check if a new sector is reached
-    const SECTORSIZE = 10000;
     if( sector.x != Math.round(player.x / SECTORSIZE) || 
         sector.y != Math.round(player.y / SECTORSIZE)) 
     {
@@ -176,17 +192,13 @@ function loop(timestamp) {
     else player.speed = 300;
 
     // Check if movement
-    if(keyDown['w'] || keyDown['a'] || keyDown['s'] || keyDown['d']) {
-        player.destination.set = false;
-
-        if(keyDown['w']) player.velocity.y -= player.speed * deltaTime;
-        if(keyDown['s']) player.velocity.y += player.speed * deltaTime;
-        if(keyDown['a']) player.velocity.x -= player.speed * deltaTime;
-        if(keyDown['d']) player.velocity.x += player.speed * deltaTime;
-    }
+    if(keyDown['w']) player.velocity.y -= player.speed * deltaTime;
+    if(keyDown['s']) player.velocity.y += player.speed * deltaTime;
+    if(keyDown['a']) player.velocity.x -= player.speed * deltaTime;
+    if(keyDown['d']) player.velocity.x += player.speed * deltaTime;
 
     // Update player
-    player.update(deltaTime);
+    player.update(deltaTime, mouseDownId != -1);
 
     // Run server exchange every .1 seconds
     pingTime += deltaTime;
@@ -224,13 +236,26 @@ function OnServerRecieve(event) {
         return;
     }
 
+    // Handle purchase packet
+    if(packet.name == "purchase") {
+        console.log(packet.data);
+
+        // Update solar systems
+        ServerLoop();
+        return;
+    }
     // Handle playerdata packet
     if(packet.name == "players") {
         serverPlayers = packet.data;
-        if(players.length !== serverPlayers.length) players = serverPlayers; 
+        if(players.length != serverPlayers.length) players = serverPlayers; 
 
         // Copy initial velocity and nudge toward real xy
         for(let i = 0; i < serverPlayers.length; ++i) {
+            if(serverPlayers[i].you) {
+                player.money = serverPlayers[i].money;
+                player.resources = serverPlayers[i].resources;
+                document.getElementById("money").innerHTML = "$" + player.money;
+            }
             players[i].xv = serverPlayers[i].xv;
             players[i].yv = serverPlayers[i].yv;
         }
@@ -238,7 +263,31 @@ function OnServerRecieve(event) {
     // Handle solar system packet
     if(packet.name == "solar") {
         if(solarSystems.length > 1) solarSystems.splice(0, 1);
-        solarSystems.push(new Planet(packet.data));
+
+        // Construct star
+        const star = new Planet(packet.data);
+        
+        // If system already exists, overwrite it
+        for(let i = 0; i < solarSystems.length; i++) {
+            if(solarSystems[i].name == packet.data.name) {
+                // Apply only changeable data
+                function apply(planetA, planetB) {
+                    planetA.owner = planetB.owner;
+                    planetA.cost = planetB.cost;
+                    planetA.production = planetB.production;
+
+                    // Do for children
+                    for(let i = 0; i < planetA.orbiters.length; i++) {
+                        apply(planetA.orbiters[i], planetB.orbiters[i]);
+                    }
+                }
+                apply(solarSystems[i], star);
+                return;
+            }
+        }
+
+        // Add star
+        solarSystems.push(star);
     }
 }
 
@@ -271,28 +320,18 @@ document.addEventListener('keydown', (event) => {keyDown[event.key] = true;}, fa
 document.addEventListener('keyup', (event) => {keyDown[event.key] = false;}, false);
 addEventListener("wheel", (event) => {
     player.zoomVelocity -= event.deltaY * deltaTime / 500;
-    player.destination.set = false;
 });
 
 function MouseMoveEvent(event) {
-    player.mouse = {
-        x: event.clientX,
-        y: event.clientY
-    };
+    player.absMouse.x = event.clientX;
+    player.absMouse.y = event.clientY;
 }
 
 // ID used for while mouse down
 let mouseDownId = -1;
 
 // Event runs every .1 second while mouse is down
-function WhileMouseDown() {
-    // Apply new destination
-    player.destination.x = (player.mouse.x - width / 2) / scale + player.x;
-    player.destination.y = (player.mouse.y - height / 2) / scale + player.y;
-    player.destination.zoom = player.zoom;
-    player.destination.set = true;
-    player.destination.type = null;
-}
+function WhileMouseDown() {}
 
 function OnMouseUp(event) {
     // Remove while mouse down event
@@ -308,7 +347,25 @@ function ClickEventSystem(event, system) {
     for(let i = 0; i < system.length; i++) {
         if(system[i].selected) {
             windowManager.AddWindow(Window.FromPage(
-                "./pages/planet.html?" + system[i].GetPageParam()
+                "./pages/planet.html?" + system[i].GetPageParam(),
+                (content) => {
+                    // Add update loop
+                    content.setInterval(() => {
+                        // Update ownership and production
+                        content.document.getElementById("planet-owner")
+                            .innerHTML = system[i].owner;
+                    }, 500);
+                    
+                    // Bind purchase button
+                    let button = content.document.getElementById("planet-buy");
+                    button.addEventListener("click", () => {
+                        client.Send(
+                            JSON.stringify(
+                                {"name": "buyPlanet", "data": system[i].id}
+                            )
+                        );
+                    });
+                }              
             ));
             return true;
         }
@@ -320,9 +377,6 @@ function ClickEventSystem(event, system) {
 }
 
 function OnMouseDown(event) {
-    // Reset player destination
-    player.destination.type = null;
-
     // Handle while mouse down logic
     if(mouseDownId == -1)
         mouseDownId = setInterval(WhileMouseDown, 100);
@@ -351,6 +405,22 @@ canvas.addEventListener("touchmove", (event) => {
     MouseMoveEvent({clientX: event.touches[0].pageX, clientY: event.touches[0].pageY});
 });
 
+function ServerLoop() {
+    // Reload all solar systems
+    const coords = new Array();
+    for(let i = 0; i < solarSystems.length; i++) {
+        coords.push({
+            x: Math.round(solarSystems[i].position.x / SECTORSIZE),
+            y: Math.round(solarSystems[i].position.y / SECTORSIZE)
+        });
+    }
+
+    // Request sectors
+    for(let i = 0; i < coords.length; i++) {
+        client.Send(JSON.stringify({"name": "sector", "data": coords[i]}));
+    }
+}
+
 // Main entrypoint
 window.onload = function() {
     // Connect to server
@@ -363,8 +433,11 @@ window.onload = function() {
         OnServerFail
     );
 
-    // Inital render for connection screen
-    render();
+    // Start ping loop
+    window.setInterval(ServerLoop, SERVER_LOOP_PING);
+
+    windowManager.AddWindow(Window.FromPage("./pages/manage.html?planet=AA00-Tepelucus"));
+    
     // Start loop
     window.requestAnimationFrame(loop);
 }

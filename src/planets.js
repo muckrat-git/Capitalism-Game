@@ -8,40 +8,13 @@ function GetTime() {
 
 export class Planet {
     // Legacy dev constructor
-    /*constructor(name, size, sprite, position, orbiters = new Array()) {
-        this.name = name;
-        this.position = position;
-        this.selected = false;
-
-        // Set location to none unless is star
-        this.location = "";
-        if(name.includes("Star")) {
-            this.location = "System " + name.replace("Star ", "");
-        }
-
-		// Orbital data
-		this.orbiters = orbiters;
-		this.orbit = 0
-		this.distance = MathUtil.distance(0, 0, this.position.x, this.position.y);
-
-		// Rendering data
-		this.size = size;
-        this.sprite = new Image();
-        this.sprite.src = sprite;
-		this.drawPos = {x:0, y:0};
-
-        this.owner = "";
-        this.type = "";
-        this.composition = {};
-        this.production = {};
-    }*/
-
     constructor(json) {
         this.name = json.name;
         this.position = json.position;
         this.selected = json.selected;
 
 		// Orbital data
+        this.id = json.id;
         this.location = "Sector " + json.location;
         this.orbit = 0
         this.distance = MathUtil.distance(0, 0, this.position.x, this.position.y);
@@ -52,6 +25,8 @@ export class Planet {
         this.sprite.src = json.sprite;
 		this.drawPos = {x:0, y:0};
 
+        this.cost = json.cost;
+        
         this.owner = json.owner;
         this.type = json.type;
         this.composition = json.composition;
@@ -76,8 +51,8 @@ export class Planet {
         this.selected = MathUtil.distance(
 			this.drawPos.x + hsize, 
 			this.drawPos.y + hsize, 
-			player.mouse.x, 
-			player.mouse.y) < hsize;
+			player.absMouse.x, 
+			player.absMouse.y) < hsize;
 
         
 		// Check if orbiting
@@ -155,6 +130,17 @@ export class Planet {
 		}
 	}
 
+    // Get human readable cost
+    GetCostPretty() {
+        const units = ["", "K", "M", "B", "T", "Q", "Qi", "S"];
+        let cost = this.cost;
+
+        const unit = units[Math.floor(Math.log10(cost) / 3)];
+        const value = (cost / Math.pow(1000, Math.floor(Math.log10(cost) / 3)));
+        
+        return value.toFixed(2) + unit;
+    }
+
     // Get parameters for ./pages/planet.html
     GetPageParam() {
         const planet = this.name;
@@ -177,7 +163,10 @@ export class Planet {
             "&owner=" + owner + 
             "&type=" + type + 
             "&location=" + location + 
-            "&composition=" + composition
+            "&composition=" + composition +
+            "&productionx=" + JSON.stringify(this.production.x) + 
+            "&productiony=" + JSON.stringify(this.production.y) +
+            "&cost=" + this.GetCostPretty()
         );
     }
 }

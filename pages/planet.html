@@ -51,6 +51,8 @@
 
         .planet-bio p {
             text-align: left;
+            margin-top: 0;
+            margin-bottom: 1vw;
             margin-right: 4vw;
             margin-left: 4vw;
         }
@@ -79,9 +81,10 @@
 <body>
     <div class="planet-bio">
         <h1 id="title">Planet</h1>
-        <img class="planet-image" src="../resources/World3.svg">
+        <img class="planet-image" src="../resources/Terrestrial.svg">
         <p>Owner: <span id="planet-owner">N/A</span></p>
-        <button>Manage</button>
+        <p>Value: <span id="planet-cost">N/A</span></p>
+        <button id="planet-buy">Purchase</button>
     </div>
     <div class="planet-info">
         <p>Type: <span id="planet-type">Gas Giant</span></p>
@@ -112,6 +115,7 @@
             const type = urlParams.get("type");
             const location = urlParams.get("location");
             const src = urlParams.get("src");
+            const cost = urlParams.get("cost");
 
             // Set planet info
             document.title = planet;
@@ -119,6 +123,7 @@
             document.getElementById("planet-owner").innerHTML = owner;
             document.getElementById("planet-type").innerHTML = type;
             document.getElementById("planet-location").innerHTML = location;
+            document.getElementById("planet-cost").innerHTML = "$" + cost;
             const images = document.getElementsByClassName("planet-image");
             for(let i = 0; i < images.length; i++) {
                 images[i].src = src;
@@ -128,10 +133,10 @@
             const composition = urlParams.get("composition");
             document.getElementById("planet-composition").innerHTML = composition;
             
-            // Make dummy graph data
+            // Collect production data
             let data = {
-                x: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-                y: [0, 4, 7, 13, 12, 10, 20, 24, 29, 29, 28, 33]
+                x: JSON.parse(urlParams.get("productionx")),
+                y: JSON.parse(urlParams.get("productiony"))
             };
             
             // Create graph obj from json string of data

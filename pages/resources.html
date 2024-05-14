@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+
+    <!-- Embed specific meta -->
+    <meta name="window" minw="150" minh="200" width="200" height="300" />
+
+    <link href="style.css" rel="stylesheet" type="text/css" />
+    <title>Resources</title>
+    <style>
+        div {
+            display: block;
+            width: calc(100% - 4vw);
+            outline: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 2vw;
+            margin-bottom: 2vw;
+        }
+        #resources {
+            margin: 0;
+        }
+        p,span {
+            margin: 0;
+            padding: 0;
+            display: inline;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 6vw;
+        }
+        span {
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div id="resources"></div>
+    <script type="text/javascript">
+        // Update to be called in main script
+        let lastTime = 0;
+        function update(player) {
+            // Check if 1 second has passed
+            const currentTime = Date.now();
+            if(currentTime - lastTime < 1000) return;
+
+            lastTime = currentTime;
+            
+            // Get player resources
+            const resources = player.resources;
+
+            // Display/Update page
+            document.getElementById("resources").innerHTML = "";
+            
+            // Resources are stores as [[name, amount]]
+            for(let i = 0; i < resources.length; i++) {
+                // Create list item div
+                const item = document.createElement("div");
+                
+                // Put resource name and amount into list elem
+                const resource = document.createElement("p");
+                resource.innerHTML = resources[i][0];
+                const amount = document.createElement("span");
+                amount.innerHTML = resources[i][1];
+
+                // Add to list item
+                item.appendChild(resource);
+                item.appendChild(amount);
+                document.getElementById("resources").appendChild(item);
+            }
+        }
+    </script>
+</body>
+</html>
